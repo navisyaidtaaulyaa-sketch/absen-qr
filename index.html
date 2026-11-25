@@ -66,25 +66,6 @@
       border: 1px solid #334155;
     }
 
-    label {
-      display: block;
-      font-size: 13px;
-      margin-bottom: 8px;
-      color: #cbd5e1;
-    }
-
-    input {
-      width: 100%;
-      padding: 14px;
-      border-radius: 10px;
-      border: 1px solid #475569;
-      background: #0f172a;
-      color: white;
-      outline: none;
-      margin-bottom: 15px;
-      font-size: 14px;
-    }
-
     button {
       width: 100%;
       border: none;
@@ -131,6 +112,7 @@
       line-height: 1.6;
       text-align: center;
       overflow-wrap: anywhere;
+      white-space: pre-line;
     }
 
     .success {
@@ -165,45 +147,34 @@
 
   <div class="header">
     <div class="logo">S2</div>
+
     <h1>SCANNER ABSENSI QR</h1>
-    <p class="subtitle">SMAN 2 PAYAKUMBUH</p>
+
+    <p class="subtitle">
+      SMAN 2 PAYAKUMBUH
+    </p>
   </div>
 
   <div class="card">
 
-    <label>Nama Guru</label>
-    <input
-      type="text"
-      id="namaGuru"
-      placeholder="Masukkan nama guru"
-    >
-
-    <label>Mata Pelajaran</label>
-    <input
-      type="text"
-      id="mapel"
-      placeholder="Masukkan mata pelajaran"
-    >
-
     <button
       class="btn-start"
       id="btnStart"
-      onclick="mulaiScanner()"
-    >
+      onclick="mulaiScanner()">
       📷 MULAI SCAN QR
     </button>
 
     <button
       class="btn-stop hidden"
       id="btnStop"
-      onclick="hentikanScanner()"
-    >
+      onclick="hentikanScanner()">
       MATIKAN KAMERA
     </button>
 
   </div>
 
   <div class="card">
+
     <div id="reader"></div>
 
     <div id="status" class="status waiting">
@@ -213,355 +184,338 @@
     <button
       class="btn-again hidden"
       id="btnAgain"
-      onclick="scanLagi()"
-    >
+      onclick="scanLagi()">
       SCAN SISWA BERIKUTNYA
     </button>
+
   </div>
 
   <p class="info">
-    Sistem Absensi Digital<br>
+    SISTEM ABSENSI DIGITAL<br>
     SMAN 2 PAYAKUMBUH<br>
-    Pastikan kamera mendapatkan izin akses.
+    Arahkan kamera ke QR Code siswa.
   </p>
 
 </div>
 
 <script>
-  // =====================================
-  // KONFIGURASI GOOGLE APPS SCRIPT
-  // =====================================
 
-  const GAS_WEB_APP_URL =
-    "https://script.google.com/macros/s/ISI_ID_DEPLOYMENT/exec";
+// =====================================
+// KONFIGURASI GOOGLE APPS SCRIPT
+// =====================================
 
-  const GAS_ORIGIN =
-    "https://USERNAME.github.io";
+const GAS_WEB_APP_URL =
+  "https://script.google.com/macros/s/ISI_ID_DEPLOYMENT/exec";
 
-  // =====================================
-  // VARIABEL SCANNER
-  // =====================================
+// Alamat GitHub Pages
+const GAS_ORIGIN =
+  "https://USERNAME.github.io";
 
-  let scanner = null;
-  let kameraAktif = false;
-  let sedangMengirim = false;
+// =====================================
+// VARIABEL SCANNER
+// =====================================
 
-  const statusBox = document.getElementById("status");
-  const btnStart = document.getElementById("btnStart");
-  const btnStop = document.getElementById("btnStop");
-  const btnAgain = document.getElementById("btnAgain");
+let scanner = null;
+let kameraAktif = false;
+let sedangMengirim = false;
 
-  // =====================================
-  // AMBIL PARAMETER DARI APLIKASI GAS
-  // =====================================
+const statusBox = document.getElementById("status");
+const btnStart = document.getElementById("btnStart");
+const btnStop = document.getElementById("btnStop");
+const btnAgain = document.getElementById("btnAgain");
 
-  const params = new URLSearchParams(location.search);
+// =====================================
+// STATUS SCANNER
+// =====================================
 
-  const guruDariApp = params.get("guru") || "";
-  const mapelDariApp = params.get("mapel") || "";
+function tampilStatus(pesan, jenis = "waiting") {
+  statusBox.className = "status " + jenis;
+  statusBox.textContent = pesan;
+}
 
-  document.getElementById("namaGuru").value = guruDariApp;
-  document.getElementById("mapel").value = mapelDariApp;
+// =====================================
+// MULAI KAMERA
+// =====================================
 
-  // =====================================
-  // TAMPILKAN STATUS
-  // =====================================
+async function mulaiScanner() {
 
-  function tampilStatus(pesan, jenis = "waiting") {
-    statusBox.className = "status " + jenis;
-    statusBox.textContent = pesan;
+  if (!window.isSecureContext) {
+    tampilStatus(
+      "Scanner harus dibuka melalui HTTPS GitHub Pages.",
+      "error"
+    );
+    return;
   }
 
-  // =====================================
-  // MULAI KAMERA
-  // =====================================
+  btnStart.disabled = true;
 
-  async function mulaiScanner() {
+  tampilStatus(
+    "Meminta izin kamera...",
+    "waiting"
+  );
 
-    const guru = document.getElementById("namaGuru").value.trim();
-    const mapel = document.getElementById("mapel").value.trim();
+  try {
 
-    if (!guru || !mapel) {
-      tampilStatus(
-        "Nama guru dan mata pelajaran wajib diisi!",
-        "error"
-      );
-      return;
+    if (!scanner) {
+      scanner = new Html5Qrcode("reader");
     }
 
-    if (!window.isSecureContext) {
-      tampilStatus(
-        "Scanner harus dibuka melalui HTTPS GitHub Pages.",
-        "error"
-      );
-      return;
-    }
-
-    btnStart.disabled = true;
-
-    tampilStatus("Meminta izin kamera...", "waiting");
-
-    try {
-
-      if (!scanner) {
-        scanner = new Html5Qrcode("reader");
-      }
-
-      await scanner.start(
-        { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: {
-            width: 230,
-            height: 230
-          },
-          aspectRatio: 1
+    await scanner.start(
+      { facingMode: "environment" },
+      {
+        fps: 10,
+        qrbox: {
+          width: 230,
+          height: 230
         },
-        hasilScan,
-        function () {}
-      );
+        aspectRatio: 1
+      },
+      hasilScan,
+      function () {}
+    );
 
-      kameraAktif = true;
+    kameraAktif = true;
 
-      btnStart.classList.add("hidden");
-      btnStop.classList.remove("hidden");
+    btnStart.classList.add("hidden");
+    btnStop.classList.remove("hidden");
 
-      tampilStatus(
-        "Kamera aktif. Arahkan kamera ke QR Code siswa.",
-        "success"
-      );
+    tampilStatus(
+      "Kamera aktif. Silakan scan QR Code siswa.",
+      "success"
+    );
 
-    } catch (error) {
+  } catch (error) {
 
-      tampilStatus(
-        "Kamera gagal dibuka: " + error,
-        "error"
-      );
+    tampilStatus(
+      "Kamera gagal dibuka: " + error,
+      "error"
+    );
 
-      btnStart.disabled = false;
-    }
-  }
-
-  // =====================================
-  // KETIKA QR BERHASIL DIBACA
-  // =====================================
-
-  async function hasilScan(qrText) {
-
-    if (sedangMengirim) return;
-
-    sedangMengirim = true;
-
-    const idSiswa = String(qrText).trim();
-
-    if (!idSiswa) {
-      sedangMengirim = false;
-      return;
-    }
-
-    try {
-
-      await hentikanKameraInternal();
-
-      tampilStatus(
-        "QR terbaca. Mengirim data absensi...",
-        "waiting"
-      );
-
-      kirimKeGoogleSheets(idSiswa);
-
-    } catch (error) {
-
-      sedangMengirim = false;
-
-      tampilStatus(
-        "Gagal memproses QR: " + error,
-        "error"
-      );
-    }
-  }
-
-  // =====================================
-  // KIRIM DATA KE GOOGLE APPS SCRIPT
-  // MENGGUNAKAN JSONP
-  // =====================================
-
-  function kirimKeGoogleSheets(idSiswa) {
-
-    const guru = document.getElementById("namaGuru").value.trim();
-    const mapel = document.getElementById("mapel").value.trim();
-
-    if (!GAS_WEB_APP_URL.endsWith("/exec")) {
-      sedangMengirim = false;
-
-      tampilStatus(
-        "Alamat Web App Google Apps Script belum diatur.",
-        "error"
-      );
-
-      btnAgain.classList.remove("hidden");
-      return;
-    }
-
-    const callbackName =
-      "callbackAbsensi" + Date.now();
-
-    const script = document.createElement("script");
-
-    let selesai = false;
-
-    const timeout = setTimeout(() => {
-      if (selesai) return;
-
-      selesai = true;
-      delete window[callbackName];
-      script.remove();
-
-      sedangMengirim = false;
-
-      tampilStatus(
-        "Koneksi ke server gagal atau terlalu lama. Periksa URL Web App dan internet.",
-        "error"
-      );
-
-      btnAgain.classList.remove("hidden");
-
-    }, 20000);
-
-    window[callbackName] = function(hasil) {
-
-      if (selesai) return;
-
-      selesai = true;
-      clearTimeout(timeout);
-
-      delete window[callbackName];
-      script.remove();
-
-      sedangMengirim = false;
-
-      if (hasil && hasil.success) {
-
-        tampilStatus(
-          "ABSENSI BERHASIL!\n\n" +
-          "Nama: " + hasil.nama +
-          "\nKelas: " + hasil.kelas,
-          "success"
-        );
-
-      } else {
-
-        tampilStatus(
-          hasil && hasil.message
-            ? hasil.message
-            : "Absensi gagal.",
-          "error"
-        );
-      }
-
-      btnAgain.classList.remove("hidden");
-    };
-
-    script.onerror = function() {
-
-      if (selesai) return;
-
-      selesai = true;
-      clearTimeout(timeout);
-
-      delete window[callbackName];
-      script.remove();
-
-      sedangMengirim = false;
-
-      tampilStatus(
-        "Tidak dapat menghubungi server absensi.",
-        "error"
-      );
-
-      btnAgain.classList.remove("hidden");
-    };
-
-    const url = new URL(GAS_WEB_APP_URL);
-
-    url.searchParams.set("action", "scan");
-    url.searchParams.set("id", idSiswa);
-    url.searchParams.set("guru", guru);
-    url.searchParams.set("mapel", mapel);
-    url.searchParams.set("origin", GAS_ORIGIN);
-    url.searchParams.set("callback", callbackName);
-
-    script.src = url.toString();
-
-    document.body.appendChild(script);
-  }
-
-  // =====================================
-  // HENTIKAN KAMERA INTERNAL
-  // =====================================
-
-  async function hentikanKameraInternal() {
-
-    if (scanner && kameraAktif) {
-
-      await scanner.stop();
-
-      kameraAktif = false;
-    }
-
-    btnStop.classList.add("hidden");
-    btnStart.classList.remove("hidden");
     btnStart.disabled = false;
   }
+}
 
-  // =====================================
-  // TOMBOL MATIKAN KAMERA
-  // =====================================
+// =====================================
+// HASIL SCAN QR
+// =====================================
 
-  async function hentikanScanner() {
+async function hasilScan(qrText) {
 
-    try {
+  if (sedangMengirim) return;
 
-      await hentikanKameraInternal();
+  sedangMengirim = true;
 
-      tampilStatus(
-        "Kamera berhasil dimatikan.",
-        "waiting"
-      );
+  const idSiswa = String(qrText).trim();
 
-    } catch (error) {
-
-      tampilStatus(
-        "Gagal mematikan kamera: " + error,
-        "error"
-      );
-    }
+  if (!idSiswa) {
+    sedangMengirim = false;
+    return;
   }
 
-  // =====================================
-  // SCAN SISWA BERIKUTNYA
-  // =====================================
+  try {
 
-  function scanLagi() {
+    await hentikanKameraInternal();
 
-    btnAgain.classList.add("hidden");
+    tampilStatus(
+      "QR berhasil dibaca.\nMengirim data absensi...",
+      "waiting"
+    );
+
+    kirimKeGoogleSheets(idSiswa);
+
+  } catch (error) {
 
     sedangMengirim = false;
 
-    mulaiScanner();
+    tampilStatus(
+      "Gagal memproses QR: " + error,
+      "error"
+    );
+  }
+}
+
+// =====================================
+// KIRIM DATA KE GOOGLE SPREADSHEET
+// =====================================
+
+function kirimKeGoogleSheets(idSiswa) {
+
+  if (!GAS_WEB_APP_URL.endsWith("/exec")) {
+
+    sedangMengirim = false;
+
+    tampilStatus(
+      "URL Google Apps Script belum diatur.",
+      "error"
+    );
+
+    btnAgain.classList.remove("hidden");
+    return;
   }
 
-  // =====================================
-  // BERSIHKAN KAMERA SAAT HALAMAN DITUTUP
-  // =====================================
+  const callbackName =
+    "callbackAbsensi" + Date.now();
 
-  window.addEventListener("pagehide", function() {
+  const script = document.createElement("script");
 
-    if (scanner && kameraAktif) {
-      scanner.stop().catch(function() {});
+  let selesai = false;
+
+  const timeout = setTimeout(() => {
+
+    if (selesai) return;
+
+    selesai = true;
+
+    delete window[callbackName];
+    script.remove();
+
+    sedangMengirim = false;
+
+    tampilStatus(
+      "Koneksi server gagal atau terlalu lama.",
+      "error"
+    );
+
+    btnAgain.classList.remove("hidden");
+
+  }, 20000);
+
+  window[callbackName] = function(hasil) {
+
+    if (selesai) return;
+
+    selesai = true;
+
+    clearTimeout(timeout);
+
+    delete window[callbackName];
+    script.remove();
+
+    sedangMengirim = false;
+
+    if (hasil && hasil.success) {
+
+      tampilStatus(
+        "ABSENSI BERHASIL!\n\n" +
+        "Nama: " + hasil.nama +
+        "\nKelas: " + hasil.kelas,
+        "success"
+      );
+
+    } else {
+
+      tampilStatus(
+        hasil && hasil.message
+          ? hasil.message
+          : "Absensi gagal.",
+        "error"
+      );
     }
 
-  });
+    btnAgain.classList.remove("hidden");
+  };
+
+  script.onerror = function() {
+
+    if (selesai) return;
+
+    selesai = true;
+
+    clearTimeout(timeout);
+
+    delete window[callbackName];
+    script.remove();
+
+    sedangMengirim = false;
+
+    tampilStatus(
+      "Tidak dapat menghubungi server absensi.",
+      "error"
+    );
+
+    btnAgain.classList.remove("hidden");
+  };
+
+  const url = new URL(GAS_WEB_APP_URL);
+
+  url.searchParams.set("action", "scan");
+  url.searchParams.set("id", idSiswa);
+
+  // Tidak lagi mengirim nama guru dan mata pelajaran
+  url.searchParams.set("origin", GAS_ORIGIN);
+  url.searchParams.set("callback", callbackName);
+
+  script.src = url.toString();
+
+  document.body.appendChild(script);
+}
+
+// =====================================
+// HENTIKAN KAMERA INTERNAL
+// =====================================
+
+async function hentikanKameraInternal() {
+
+  if (scanner && kameraAktif) {
+
+    await scanner.stop();
+
+    kameraAktif = false;
+  }
+
+  btnStop.classList.add("hidden");
+  btnStart.classList.remove("hidden");
+  btnStart.disabled = false;
+}
+
+// =====================================
+// MATIKAN KAMERA
+// =====================================
+
+async function hentikanScanner() {
+
+  try {
+
+    await hentikanKameraInternal();
+
+    tampilStatus(
+      "Kamera berhasil dimatikan.",
+      "waiting"
+    );
+
+  } catch (error) {
+
+    tampilStatus(
+      "Gagal mematikan kamera: " + error,
+      "error"
+    );
+  }
+}
+
+// =====================================
+// SCAN SISWA BERIKUTNYA
+// =====================================
+
+function scanLagi() {
+
+  btnAgain.classList.add("hidden");
+
+  sedangMengirim = false;
+
+  mulaiScanner();
+}
+
+// =====================================
+// KETIKA HALAMAN DITUTUP
+// =====================================
+
+window.addEventListener("pagehide", function() {
+
+  if (scanner && kameraAktif) {
+    scanner.stop().catch(function() {});
+  }
+
+});
 
 </script>
 

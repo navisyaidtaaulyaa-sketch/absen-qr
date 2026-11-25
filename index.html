@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0f172a">
 
-  <title>Absensi QR - SMAN 2 Payakumbuh</title>
+  <title>Scanner QR - SMAN 2 Payakumbuh</title>
 
   <script src="https://unpkg.com/html5-qrcode"></script>
 
@@ -20,7 +20,7 @@
     body {
       font-family: Arial, sans-serif;
       background: #0f172a;
-      color: #ffffff;
+      color: white;
       min-height: 100vh;
       padding: 20px;
     }
@@ -41,13 +41,12 @@
       height: 72px;
       margin: 0 auto 15px;
       border-radius: 22px;
-      background: linear-gradient(135deg, #6366f1, #4338ca);
+      background: #4f46e5;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 27px;
       font-weight: bold;
-      box-shadow: 0 8px 25px rgba(79, 70, 229, .35);
     }
 
     h1 {
@@ -83,25 +82,19 @@
       font-weight: bold;
       cursor: pointer;
       margin-top: 10px;
-      transition: .2s;
     }
 
-    button:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-    }
-
-    .btn-start {
+    .start {
       background: #4f46e5;
       color: white;
     }
 
-    .btn-stop {
+    .stop {
       background: #dc2626;
       color: white;
     }
 
-    .btn-again {
+    .again {
       background: #059669;
       color: white;
     }
@@ -114,11 +107,6 @@
 
     #reader video {
       object-fit: cover;
-      border-radius: 12px;
-    }
-
-    #reader__scan_region {
-      min-height: 200px;
     }
 
     .status {
@@ -129,62 +117,41 @@
       font-size: 14px;
       line-height: 1.7;
       text-align: center;
-      overflow-wrap: anywhere;
       white-space: pre-line;
+      overflow-wrap: anywhere;
     }
 
     .success {
       color: #4ade80;
-      border: 1px solid #166534;
     }
 
     .error {
       color: #f87171;
-      border: 1px solid #991b1b;
     }
 
     .waiting {
       color: #facc15;
-      border: 1px solid #854d0e;
     }
 
-    .info {
-      color: #94a3b8;
-      font-size: 12px;
-      text-align: center;
-      margin-top: 20px;
-      line-height: 1.8;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .result-title {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-
-    .student-info {
+    .student {
       background: #0f172a;
       border-radius: 12px;
       padding: 15px;
       margin-top: 12px;
       line-height: 1.8;
       font-size: 14px;
-      text-align: left;
     }
 
-    .student-info strong {
-      color: #a5b4fc;
+    .hidden {
+      display: none !important;
     }
 
-    .camera-note {
+    .info {
       color: #94a3b8;
       text-align: center;
       font-size: 12px;
-      margin-top: 12px;
+      margin-top: 20px;
+      line-height: 1.8;
     }
   </style>
 </head>
@@ -193,100 +160,78 @@
 
 <div class="container">
 
-  <!-- HEADER -->
   <div class="header">
     <div class="logo">S2</div>
-
     <h1>SCANNER ABSENSI QR</h1>
-
-    <p class="subtitle">
-      SMAN 2 PAYAKUMBUH
-    </p>
+    <p class="subtitle">SMAN 2 PAYAKUMBUH</p>
   </div>
 
-  <!-- KONTROL KAMERA -->
   <div class="card">
 
     <div class="section-title">
-      📷 Pemindai QR Code Siswa
+      PEMINDAI QR CODE SISWA
     </div>
 
     <button
-      class="btn-start"
+      class="start"
       id="btnStart"
-      type="button"
       onclick="mulaiScanner()">
-      MULAI SCAN QR
+      📷 MULAI SCAN QR
     </button>
 
     <button
-      class="btn-stop hidden"
+      class="stop hidden"
       id="btnStop"
-      type="button"
       onclick="hentikanScanner()">
       MATIKAN KAMERA
     </button>
 
-    <p class="camera-note">
-      Tekan tombol mulai untuk mengaktifkan kamera belakang HP.
-    </p>
-
   </div>
 
-  <!-- AREA SCANNER -->
   <div class="card">
 
     <div id="reader"></div>
 
-    <div
-      id="status"
-      class="status waiting">
+    <div id="status" class="status waiting">
       Kamera belum diaktifkan.
     </div>
 
-    <div
-      id="studentInfo"
-      class="student-info hidden">
-    </div>
+    <div id="studentInfo" class="student hidden"></div>
 
     <button
-      class="btn-again hidden"
+      class="again hidden"
       id="btnAgain"
-      type="button"
       onclick="scanLagi()">
       SCAN SISWA BERIKUTNYA
     </button>
 
   </div>
 
-  <!-- FOOTER -->
   <p class="info">
     SISTEM ABSENSI DIGITAL<br>
     SMAN 2 PAYAKUMBUH<br>
-    <br>
-    Scan QR Code masing-masing siswa
-    untuk melakukan absensi.
+    Scan QR Code masing-masing siswa.
   </p>
 
 </div>
 
 <script>
 
-// ============================================
-// KONFIGURASI GOOGLE APPS SCRIPT
-// ============================================
+// ==================================================
+// KONFIGURASI SERVER
+// ==================================================
 
-// GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT
+// GANTI SETELAH WEB APP GOOGLE APPS SCRIPT DIDEPLOY
 const GAS_WEB_APP_URL =
-  "https://script.google.com/macros/s/ISI_ID_DEPLOYMENT/exec";
+  "ISI_URL_WEB_APP_GOOGLE_APPS_SCRIPT/exec";
 
-// GANTI USERNAME DENGAN USERNAME GITHUB
-const GAS_ORIGIN =
-  "https://USERNAME.github.io";
+// ALAMAT GITHUB KAMU
+const GITHUB_ORIGIN =
+  "https://navisyaidtaaulyaa-sketch.github.io";
 
-// ============================================
-// VARIABEL APLIKASI
-// ============================================
+// ==================================================
+// VARIABEL
+// ==================================================
 
 let scanner = null;
 let kameraAktif = false;
@@ -299,40 +244,32 @@ const btnStart = document.getElementById("btnStart");
 const btnStop = document.getElementById("btnStop");
 const btnAgain = document.getElementById("btnAgain");
 
-// ============================================
-// FUNGSI STATUS
-// ============================================
+// ==================================================
+// STATUS
+// ==================================================
 
 function tampilStatus(pesan, jenis = "waiting") {
-
   statusBox.className = "status " + jenis;
-
   statusBox.textContent = pesan;
 }
 
-// ============================================
-// FUNGSI MULAI SCANNER
-// ============================================
+// ==================================================
+// MULAI KAMERA
+// ==================================================
 
 async function mulaiScanner() {
 
-  if (sedangMengirim) {
-    return;
-  }
+  if (sedangMengirim) return;
 
   if (!window.isSecureContext) {
-
     tampilStatus(
-      "Scanner harus dibuka melalui HTTPS GitHub Pages.",
+      "Scanner harus dibuka melalui HTTPS.",
       "error"
     );
-
     return;
   }
 
   btnStart.disabled = true;
-
-  studentInfo.classList.add("hidden");
 
   tampilStatus(
     "Meminta izin kamera...",
@@ -342,39 +279,30 @@ async function mulaiScanner() {
   try {
 
     if (!scanner) {
-
       scanner = new Html5Qrcode("reader");
     }
 
     await scanner.start(
-
       { facingMode: "environment" },
-
       {
         fps: 10,
-
         qrbox: {
           width: 230,
           height: 230
         },
-
         aspectRatio: 1
       },
-
       hasilScan,
-
       function () {}
-
     );
 
     kameraAktif = true;
 
     btnStart.classList.add("hidden");
-
     btnStop.classList.remove("hidden");
 
     tampilStatus(
-      "KAMERA AKTIF\nArahkan kamera ke QR Code siswa.",
+      "KAMERA AKTIF\nArahkan kamera ke QR siswa.",
       "success"
     );
 
@@ -390,24 +318,20 @@ async function mulaiScanner() {
   }
 }
 
-// ============================================
-// HASIL PEMINDAIAN QR CODE
-// ============================================
+// ==================================================
+// HASIL SCAN
+// ==================================================
 
 async function hasilScan(qrText) {
 
-  if (sedangMengirim) {
-    return;
-  }
+  if (sedangMengirim) return;
 
   sedangMengirim = true;
 
   const idSiswa = String(qrText).trim();
 
   if (!idSiswa) {
-
     sedangMengirim = false;
-
     return;
   }
 
@@ -427,7 +351,7 @@ async function hasilScan(qrText) {
     sedangMengirim = false;
 
     tampilStatus(
-      "Gagal membaca QR:\n" + error,
+      "Gagal memproses QR: " + error,
       "error"
     );
 
@@ -436,22 +360,21 @@ async function hasilScan(qrText) {
   }
 }
 
-// ============================================
-// KIRIM DATA KE GOOGLE SPREADSHEET
-// ============================================
+// ==================================================
+// KIRIM DATA KE GOOGLE APPS SCRIPT
+// ==================================================
 
 function kirimKeGoogleSheets(idSiswa) {
 
   if (
     !GAS_WEB_APP_URL.startsWith("https://") ||
-    !GAS_WEB_APP_URL.endsWith("/exec") ||
-    GAS_WEB_APP_URL.includes("ISI_ID_DEPLOYMENT")
+    GAS_WEB_APP_URL.includes("ISI_URL_WEB_APP")
   ) {
 
     sedangMengirim = false;
 
     tampilStatus(
-      "URL Google Apps Script belum diatur.",
+      "URL Web App Google Apps Script belum dimasukkan.",
       "error"
     );
 
@@ -474,13 +397,12 @@ function kirimKeGoogleSheets(idSiswa) {
     selesai = true;
 
     delete window[callbackName];
-
     script.remove();
 
     sedangMengirim = false;
 
     tampilStatus(
-      "Koneksi ke server gagal atau terlalu lama.\nPeriksa internet dan URL Web App.",
+      "Koneksi server terlalu lama. Periksa internet dan URL Web App.",
       "error"
     );
 
@@ -497,25 +419,21 @@ function kirimKeGoogleSheets(idSiswa) {
     clearTimeout(timeout);
 
     delete window[callbackName];
-
     script.remove();
 
     sedangMengirim = false;
 
-    if (hasil && hasil.success === true) {
+    if (hasil && hasil.success) {
 
       tampilStatus(
-        "ABSENSI BERHASIL!",
+        "✓ ABSENSI BERHASIL!",
         "success"
       );
 
-      studentInfo.innerHTML =
-        '<div class="result-title">✓ DATA SISWA</div>' +
-        '<strong>Nama:</strong> ' +
-        aman(hasil.nama) +
-        '<br>' +
-        '<strong>Kelas:</strong> ' +
-        aman(hasil.kelas);
+      studentInfo.textContent =
+        "Nama: " + hasil.nama +
+        "\nKelas: " + hasil.kelas +
+        "\nID: " + hasil.id;
 
       studentInfo.classList.remove("hidden");
 
@@ -529,6 +447,7 @@ function kirimKeGoogleSheets(idSiswa) {
       );
 
       studentInfo.classList.add("hidden");
+
     }
 
     btnAgain.classList.remove("hidden");
@@ -544,7 +463,6 @@ function kirimKeGoogleSheets(idSiswa) {
     clearTimeout(timeout);
 
     delete window[callbackName];
-
     script.remove();
 
     sedangMengirim = false;
@@ -561,11 +479,8 @@ function kirimKeGoogleSheets(idSiswa) {
   const url = new URL(GAS_WEB_APP_URL);
 
   url.searchParams.set("action", "scan");
-
   url.searchParams.set("id", idSiswa);
-
-  url.searchParams.set("origin", GAS_ORIGIN);
-
+  url.searchParams.set("origin", GITHUB_ORIGIN);
   url.searchParams.set("callback", callbackName);
 
   script.src = url.toString();
@@ -574,43 +489,26 @@ function kirimKeGoogleSheets(idSiswa) {
 
 }
 
-// ============================================
-// MENCEGAH HTML DARI DATA SISWA
-// ============================================
-
-function aman(teks) {
-
-  const div = document.createElement("div");
-
-  div.textContent = String(teks ?? "");
-
-  return div.innerHTML;
-}
-
-// ============================================
+// ==================================================
 // HENTIKAN KAMERA INTERNAL
-// ============================================
+// ==================================================
 
 async function hentikanKameraInternal() {
 
   if (scanner && kameraAktif) {
-
     await scanner.stop();
-
     kameraAktif = false;
   }
 
   btnStop.classList.add("hidden");
-
   btnStart.classList.remove("hidden");
-
   btnStart.disabled = false;
 
 }
 
-// ============================================
-// TOMBOL MATIKAN KAMERA
-// ============================================
+// ==================================================
+// MATIKAN KAMERA
+// ==================================================
 
 async function hentikanScanner() {
 
@@ -626,7 +524,7 @@ async function hentikanScanner() {
   } catch (error) {
 
     tampilStatus(
-      "Gagal mematikan kamera:\n" + error,
+      "Gagal mematikan kamera: " + error,
       "error"
     );
 
@@ -634,9 +532,9 @@ async function hentikanScanner() {
 
 }
 
-// ============================================
-// SCAN SISWA BERIKUTNYA
-// ============================================
+// ==================================================
+// SCAN BERIKUTNYA
+// ==================================================
 
 function scanLagi() {
 
@@ -650,16 +548,14 @@ function scanLagi() {
 
 }
 
-// ============================================
-// BERSIHKAN KAMERA SAAT HALAMAN DITUTUP
-// ============================================
+// ==================================================
+// SAAT HALAMAN DITUTUP
+// ==================================================
 
 window.addEventListener("pagehide", function() {
 
   if (scanner && kameraAktif) {
-
     scanner.stop().catch(function() {});
-
   }
 
 });

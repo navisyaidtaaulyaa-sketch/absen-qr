@@ -1,14 +1,22 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
   <title>Scanner QR - SMAN 2 Payakumbuh</title>
 
   <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -21,9 +29,9 @@
     .container {
       max-width: 520px;
       margin: 20px auto;
+      padding: 22px;
       background: white;
       border-radius: 18px;
-      padding: 22px;
       box-shadow: 0 8px 25px #00000012;
     }
 
@@ -36,30 +44,45 @@
       border-radius: 18px 18px 0 0;
     }
 
-    header h2 { font-size: 19px; margin: 0 0 7px; }
-    header p { font-size: 12px; color: #bfdbfe; margin: 0; }
+    header h2 {
+      font-size: 19px;
+      margin: 0 0 7px;
+    }
+
+    header p {
+      color: #bfdbfe;
+      font-size: 12px;
+      margin: 0;
+    }
 
     #reader {
       width: 100%;
       overflow: hidden;
       border-radius: 12px;
-      background: #111827;
       margin: 15px auto;
+      background: #111827;
     }
 
     .btn {
       width: 100%;
       padding: 14px;
+      margin-top: 10px;
       border: 0;
       border-radius: 10px;
       font-size: 14px;
       font-weight: bold;
       cursor: pointer;
-      margin-top: 10px;
     }
 
-    .blue { background: #2563eb; color: white; }
-    .gray { background: #e2e8f0; color: #1e293b; }
+    .blue {
+      background: #2563eb;
+      color: white;
+    }
+
+    .gray {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
 
     .result {
       margin-top: 18px;
@@ -73,8 +96,15 @@
       line-height: 1.5;
     }
 
-    .success { background: #dcfce7; color: #166534; }
-    .error { background: #fee2e2; color: #991b1b; }
+    .success {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
 
     .info {
       color: #64748b;
@@ -88,58 +118,70 @@
 
 <body>
 
-<div class="container">
+  <div class="container">
 
-  <header>
-    <h2>SMAN 2 PAYAKUMBUH</h2>
-    <p>WEB SCANNER ABSENSI QR</p>
-  </header>
+    <header>
+      <h2>SMAN 2 PAYAKUMBUH</h2>
+      <p>WEB SCANNER ABSENSI QR</p>
+    </header>
 
-  <h3>Scanner QR Siswa</h3>
-  <p>Arahkan kamera ke QR Code siswa.</p>
+    <h3>Scanner QR Siswa</h3>
 
-  <div id="reader"></div>
+    <p>Arahkan kamera ke QR Code siswa.</p>
 
-  <button id="btnMulai" class="btn blue" onclick="mulaiKamera()">
-    BUKA KAMERA
-  </button>
+    <div id="reader"></div>
 
-  <button class="btn gray" onclick="matikanKamera()">
-    MATIKAN KAMERA
-  </button>
+    <button
+      id="btnMulai"
+      class="btn blue"
+      onclick="mulaiKamera()"
+    >
+      BUKA KAMERA
+    </button>
 
-  <div id="hasil" class="result">
-    Memeriksa koneksi aplikasi...
+    <button
+      class="btn gray"
+      onclick="matikanKamera()"
+    >
+      MATIKAN KAMERA
+    </button>
+
+    <div id="hasil" class="result">
+      Memeriksa koneksi aplikasi...
+    </div>
+
+    <p class="info">
+      Hasil pemindaian akan dikirim langsung
+      ke Google Spreadsheet.
+    </p>
+
   </div>
 
-  <p class="info">
-    Kamera menggunakan kamera belakang jika tersedia.
-    Hasil scan akan dikirim ke Google Spreadsheet.
-  </p>
-
-</div>
-
 <script>
-// ======================================
-// KONFIGURASI OTOMATIS DARI APLIKASI
-// ======================================
 
-const params = new URLSearchParams(window.location.search);
+// ==================================================
+// DATA OTOMATIS DARI APLIKASI UTAMA
+// ==================================================
 
-const TOKEN = params.get("token");
-const SERVER_URL = params.get("server");
+const parameter =
+  new URLSearchParams(window.location.search);
+
+const TOKEN = parameter.get("token");
+const SERVER_URL = parameter.get("server");
 
 let scanner = null;
 let kameraAktif = false;
 let sedangProses = false;
 
-const hasil = document.getElementById("hasil");
-const btnMulai = document.getElementById("btnMulai");
+const hasil =
+  document.getElementById("hasil");
 
-function tampil(teks, tipe) {
-  hasil.className = "result " + (tipe || "");
-  hasil.textContent = teks;
-}
+const tombol =
+  document.getElementById("btnMulai");
+
+// ==================================================
+// VALIDASI SERVER
+// ==================================================
 
 function serverValid() {
   try {
@@ -151,40 +193,53 @@ function serverValid() {
       url.pathname.includes("/macros/s/") &&
       url.pathname.endsWith("/exec")
     );
-  } catch (e) {
+
+  } catch (error) {
     return false;
   }
 }
 
-// ======================================
-// PERIKSA TOKEN DAN SERVER
-// ======================================
+function tampil(teks, tipe) {
+  hasil.className = "result " + (tipe || "");
+  hasil.textContent = teks;
+}
 
 if (!TOKEN || !serverValid()) {
+
   tampil(
-    "Sesi atau alamat server tidak ditemukan. Silakan login kembali dari aplikasi utama.",
+    "Sesi login atau alamat server tidak ditemukan. Silakan login kembali dari aplikasi utama.",
     "error"
   );
 
-  btnMulai.disabled = true;
+  tombol.disabled = true;
 
 } else {
-  tampil("Koneksi aplikasi diterima. Scanner siap dibuka.", "");
+
+  tampil(
+    "Koneksi aplikasi ditemukan. Scanner siap digunakan.",
+    ""
+  );
+
 }
 
-// ======================================
-// KAMERA
-// ======================================
+// ==================================================
+// BUKA KAMERA
+// ==================================================
 
 async function mulaiKamera() {
+
   if (!TOKEN || !serverValid()) {
-    tampil("Silakan login kembali melalui aplikasi utama.", "error");
+    tampil(
+      "Silakan login kembali melalui aplikasi utama.",
+      "error"
+    );
     return;
   }
 
   if (kameraAktif) return;
 
   try {
+
     if (!scanner) {
       scanner = new Html5Qrcode("reader");
     }
@@ -192,96 +247,139 @@ async function mulaiKamera() {
     tampil("Meminta izin kamera...", "");
 
     await scanner.start(
+
       { facingMode: "environment" },
+
       {
         fps: 10,
+
         qrbox: function(width, height) {
-          const sisi = Math.floor(Math.min(width, height) * 0.75);
-          return { width: sisi, height: sisi };
+          const sisi = Math.floor(
+            Math.min(width, height) * 0.75
+          );
+
+          return {
+            width: sisi,
+            height: sisi
+          };
         }
       },
+
       function(teksQR) {
+
         if (sedangProses) return;
 
         sedangProses = true;
+
         kirimKeServer(teksQR);
+
       },
+
       function() {
-        // Tidak perlu menampilkan pesan setiap QR belum ditemukan.
+        // Mengabaikan pesan ketika QR belum ditemukan.
       }
+
     );
 
     kameraAktif = true;
-    btnMulai.disabled = true;
-
-    tampil("KAMERA AKTIF. Arahkan kamera ke QR siswa.", "");
-
-  } catch (err) {
-    kameraAktif = false;
-    btnMulai.disabled = false;
+    tombol.disabled = true;
 
     tampil(
-      "Kamera gagal dibuka: " + (err.message || err) +
-      "\nPastikan situs GitHub Pages mendapatkan izin kamera dan dibuka melalui HTTPS.",
+      "KAMERA AKTIF. Arahkan ke QR Code siswa.",
+      ""
+    );
+
+  } catch (error) {
+
+    kameraAktif = false;
+    tombol.disabled = false;
+
+    tampil(
+      "Kamera gagal dibuka: " +
+      (error.message || error) +
+      "\nIzinkan akses kamera pada situs GitHub Pages.",
       "error"
     );
+
   }
 }
 
+// ==================================================
+// MATIKAN KAMERA
+// ==================================================
+
 async function matikanKamera() {
+
   try {
+
     if (scanner && kameraAktif) {
       await scanner.stop();
     }
-  } catch (err) {
-    console.log(err);
+
+  } catch (error) {
+    console.log(error);
   }
 
   kameraAktif = false;
   sedangProses = false;
-  btnMulai.disabled = false;
+  tombol.disabled = false;
 
-  tampil("Kamera dimatikan.", "");
+  tampil("Kamera berhasil dimatikan.", "");
+
 }
 
-// ======================================
-// KIRIM SCAN KE SERVER GOOGLE
-// ======================================
+// ==================================================
+// KIRIM HASIL SCAN KE GOOGLE APPS SCRIPT
+// ==================================================
 
 function kirimKeServer(teksQR) {
+
   const idSiswa = String(teksQR || "").trim();
 
   if (!idSiswa) {
+
     sedangProses = false;
+
     tampil("QR Code kosong.", "error");
+
     return;
   }
 
-  tampil("QR terbaca. Mengirim absensi ke server...", "");
+  tampil(
+    "QR terbaca. Mengirim absensi ke server...",
+    ""
+  );
 
   const callbackName =
-    "callbackAbsensi_" + Date.now() + "_" +
+    "callbackAbsensi_" +
+    Date.now() +
+    "_" +
     Math.floor(Math.random() * 100000);
 
-  const script = document.createElement("script");
+  const script =
+    document.createElement("script");
 
   let selesai = false;
 
   const timeout = setTimeout(function() {
+
     if (selesai) return;
 
     selesai = true;
-    hapus();
+
+    hapusScript();
 
     sedangProses = false;
 
     tampil(
-      "Server tidak merespons. Periksa koneksi internet atau sesi login.",
+      "Server tidak merespons. Periksa internet dan sesi login.",
       "error"
     );
+
   }, 25000);
 
-  function hapus() {
+  function hapusScript() {
+
     clearTimeout(timeout);
 
     if (script.parentNode) {
@@ -289,15 +387,20 @@ function kirimKeServer(teksQR) {
     }
 
     delete window[callbackName];
+
   }
 
+  // Respons server
   window[callbackName] = function(res) {
+
     if (selesai) return;
 
     selesai = true;
-    hapus();
+
+    hapusScript();
 
     if (res && res.success) {
+
       tampil(
         "✓ " + res.message +
         "\nNama: " + res.nama +
@@ -305,26 +408,37 @@ function kirimKeServer(teksQR) {
         "\nWaktu: " + res.waktu,
         "success"
       );
+
     } else {
+
       tampil(
-        "GAGAL: " + (
+        "GAGAL: " +
+        (
           res && res.message
             ? res.message
             : "Respons server tidak valid."
         ),
         "error"
       );
+
     }
 
     setTimeout(function() {
+
       sedangProses = false;
 
       if (kameraAktif) {
-        tampil("Siap memindai siswa berikutnya.", "");
+        tampil(
+          "Siap memindai siswa berikutnya.",
+          ""
+        );
       }
+
     }, 2500);
+
   };
 
+  // Susun URL otomatis dari parameter login
   const url = new URL(SERVER_URL);
 
   url.searchParams.set("action", "scan");
@@ -336,29 +450,42 @@ function kirimKeServer(teksQR) {
   script.src = url.toString();
 
   script.onerror = function() {
+
     if (selesai) return;
 
     selesai = true;
-    hapus();
+
+    hapusScript();
 
     sedangProses = false;
 
     tampil(
-      "Gagal menghubungi server Google Apps Script. Silakan periksa deployment.",
+      "Gagal menghubungi server Google Apps Script. Periksa deployment.",
       "error"
     );
+
   };
 
   document.body.appendChild(script);
+
 }
 
-// Coba membuka kamera ketika halaman scanner dibuka.
-// Jika browser tidak mengizinkan, pengguna dapat menekan tombol BUKA KAMERA.
+// ==================================================
+// OTOMATIS COBA BUKA KAMERA
+// ==================================================
+
 window.addEventListener("load", function() {
+
   if (TOKEN && serverValid()) {
-    setTimeout(mulaiKamera, 700);
+
+    setTimeout(function() {
+      mulaiKamera();
+    }, 700);
+
   }
+
 });
+
 </script>
 
 </body>
